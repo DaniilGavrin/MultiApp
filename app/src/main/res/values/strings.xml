@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">MultiApp</string>
+    <string name="calendar_icon" />
+    <string name="time_icon" />
+    <string name="multi_application">Multi Application</string>
+    <string name="time">Time</string>
+    <string name="dayrab">Рабочие дни</string>
+</resources>

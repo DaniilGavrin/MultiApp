@@ -1,0 +1,7 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@android:color/transparent"/>  <!-- Фон прозрачный -->
+    <stroke
+        android:width="2dp"
+        android:color="#FFFFFF"/>  <!-- Белая обводка -->
+    <corners android:radius="4dp"/>  <!-- Радиус углов, можно настроить по вашему желанию -->
+</shape>
