@@ -5,8 +5,8 @@
     android:viewportHeight="100">
 
     <rect
-        android:width="100"
-        android:height="100"
+        android:width="100px"
+        android:height="100px"
         android:fillColor="#CCCCCC" />
 
     <text

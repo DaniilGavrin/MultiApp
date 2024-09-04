@@ -24,6 +24,7 @@
 
         <activity android:name=".WorkDaysActivity"></activity>
         <activity android:name=".PersonDetailsActivity"></activity>
+        <activity android:name=".TimeMainActivity"></activity>
     </application>
 
 </manifest>
