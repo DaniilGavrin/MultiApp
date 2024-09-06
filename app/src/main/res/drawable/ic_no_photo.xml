@@ -4,18 +4,14 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
 
-    <rect
-        android:width="100px"
-        android:height="100px"
+    <!-- Серый фон -->
+    <path
+        android:pathData="M0,0 L100,0 L100,100 L0,100 Z"
         android:fillColor="#CCCCCC" />
 
-    <text
-        android:text="Нет фото"
-        android:fontFamily="sans-serif"
-        android:textSize="18sp"
-        android:fillColor="#000000"
-        android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:textAlignment="center" />
+    <!-- Белый крест -->
+    <path
+        android:pathData="M20,50 L80,50 M50,20 L50,80"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="8"/>
 </vector>

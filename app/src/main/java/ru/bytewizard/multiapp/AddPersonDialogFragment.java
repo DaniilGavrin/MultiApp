@@ -65,20 +65,21 @@ public class AddPersonDialogFragment extends DialogFragment {
     }
 
     private void savePerson(String lastName, String firstName, String middleName, String date) {
-        // Сохраняем данные в SharedPreferences
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("PersonPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        // Генерируем уникальный ID для каждой записи (можно использовать счетчик или UUID)
         int personId = sharedPreferences.getInt("personCount", 0) + 1;
         editor.putInt("personCount", personId);
-
-        // Сохраняем данные
         editor.putString("person_" + personId + "_lastName", lastName);
         editor.putString("person_" + personId + "_firstName", firstName);
         editor.putString("person_" + personId + "_middleName", middleName);
         editor.putString("person_" + personId + "_date", date);
         editor.apply();
+
+        Toast.makeText(getContext(), "Данные сохранены", Toast.LENGTH_SHORT).show();
+    }
+
+    public interface OnPersonListUpdatedListener {
+        void onPersonListUpdated();
     }
 }
-

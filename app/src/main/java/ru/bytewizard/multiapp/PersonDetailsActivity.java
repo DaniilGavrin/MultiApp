@@ -1,29 +1,23 @@
 package ru.bytewizard.multiapp;
 
-import android.app.AlertDialog;
-import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -47,8 +41,7 @@ public class PersonDetailsActivity extends AppCompatActivity {
     private String personImagePath; // Путь к фото
     private int personId; // ID человека
 
-    private SQLiteOpenHelper dbHelper;
-    private SQLiteDatabase database;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,11 +55,10 @@ public class PersonDetailsActivity extends AppCompatActivity {
         meetingDateTextView = findViewById(R.id.meetingDateTextView);
         timePassedTextView = findViewById(R.id.timePassedTextView);
 
+        sharedPreferences = getSharedPreferences("PersonPrefs", MODE_PRIVATE);
+
         // Получаем ID человека из Intent
         personId = getIntent().getIntExtra("personId", -1);
-
-        dbHelper = new PersonDatabaseHelper(this);
-        database = dbHelper.getWritableDatabase();
 
         if (personId != -1) {
             loadPersonDetails();
@@ -76,48 +68,31 @@ public class PersonDetailsActivity extends AppCompatActivity {
         personImageView.setOnClickListener(v -> openGallery());
 
         // Настройка кнопок
-        Button backButton = findViewById(R.id.backButton);
+        findViewById(R.id.backButton).setOnClickListener(v -> finish());
         FloatingActionButton editPersonButton = findViewById(R.id.editPersonButton);
 
-        backButton.setOnClickListener(v -> finish());
         editPersonButton.setOnClickListener(v -> openEditDialog());
     }
 
     private void loadPersonDetails() {
-        Cursor cursor = database.query("people", null, "id = ?", new String[]{String.valueOf(personId)}, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            int lastNameIndex = cursor.getColumnIndex("last_name");
-            int firstNameIndex = cursor.getColumnIndex("first_name");
-            int middleNameIndex = cursor.getColumnIndex("middle_name");
-            int dateOfMeetingIndex = cursor.getColumnIndex("date_of_meeting");
-            int imagePathIndex = cursor.getColumnIndex("image_path");
+        String lastName = sharedPreferences.getString("person_" + personId + "_lastName", "Unknown");
+        String firstName = sharedPreferences.getString("person_" + personId + "_firstName", "Unknown");
+        String middleName = sharedPreferences.getString("person_" + personId + "_middleName", "Unknown");
+        String dateOfMeeting = sharedPreferences.getString("person_" + personId + "_date", "Unknown");
+        personImagePath = sharedPreferences.getString("person_" + personId + "_imagePath", "");
 
-            if (lastNameIndex != -1 && firstNameIndex != -1 && middleNameIndex != -1 && dateOfMeetingIndex != -1) {
-                String lastName = cursor.getString(lastNameIndex);
-                String firstName = cursor.getString(firstNameIndex);
-                String middleName = cursor.getString(middleNameIndex);
-                String dateOfMeeting = cursor.getString(dateOfMeetingIndex);
-                personImagePath = cursor.getString(imagePathIndex);
+        // Обновление UI
+        lastNameTextView.setText("Фамилия: " + lastName);
+        firstNameTextView.setText("Имя: " + firstName);
+        middleNameTextView.setText("Отчество: " + middleName);
+        meetingDateTextView.setText("Дата знакомства: " + dateOfMeeting);
+        timePassedTextView.setText(calculateTimeSinceMeeting(dateOfMeeting));
 
-                // Обновление UI
-                lastNameTextView.setText("Фамилия: " + lastName);
-                firstNameTextView.setText("Имя: " + firstName);
-                middleNameTextView.setText("Отчество: " + middleName);
-                meetingDateTextView.setText("Дата знакомства: " + dateOfMeeting);
-                timePassedTextView.setText(calculateTimeSinceMeeting(dateOfMeeting));
-
-                if (personImagePath == null || personImagePath.isEmpty()) {
-                    personImageView.setImageResource(R.drawable.ic_no_photo);
-                } else {
-                    Bitmap bitmap = BitmapFactory.decodeFile(personImagePath);
-                    personImageView.setImageBitmap(bitmap);
-                }
-            } else {
-                // Логика обработки случая, когда столбцы не найдены
-                Log.e("PersonDetailsActivity", "One or more columns not found");
-            }
-
-            cursor.close();
+        if (personImagePath.isEmpty()) {
+            personImageView.setImageResource(R.drawable.ic_no_photo);
+        } else {
+            Bitmap bitmap = BitmapFactory.decodeFile(personImagePath);
+            personImageView.setImageBitmap(bitmap);
         }
     }
 
@@ -176,9 +151,9 @@ public class PersonDetailsActivity extends AppCompatActivity {
 
             // Обновление пути к изображению
             personImagePath = imageFile.getAbsolutePath();
-            ContentValues values = new ContentValues();
-            values.put("image_path", personImagePath);
-            database.update("people", values, "id = ?", new String[]{String.valueOf(personId)});
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("person_" + personId + "_imagePath", personImagePath);
+            editor.apply();
         } catch (IOException e) {
             Log.e("PersonDetailsActivity", "Error saving image", e);
         }
@@ -195,47 +170,45 @@ public class PersonDetailsActivity extends AppCompatActivity {
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_edit_person, null);
 
-        EditText nameEditText = dialogView.findViewById(R.id.nameEditText);
-        EditText dateEditText = dialogView.findViewById(R.id.dateEditText);
+        EditText lastNameEditText = dialogView.findViewById(R.id.editTextLastName);
+        EditText firstNameEditText = dialogView.findViewById(R.id.editTextFirstName);
+        EditText middleNameEditText = dialogView.findViewById(R.id.editTextMiddleName);
+        EditText dateEditText = dialogView.findViewById(R.id.editTextDate);
 
         // Загрузка текущих данных в EditText
-        nameEditText.setText(lastNameTextView.getText());
+        lastNameEditText.setText(lastNameTextView.getText().toString().replace("Фамилия: ", ""));
+        firstNameEditText.setText(firstNameTextView.getText().toString().replace("Имя: ", ""));
+        middleNameEditText.setText(middleNameTextView.getText().toString().replace("Отчество: ", ""));
         dateEditText.setText(meetingDateTextView.getText().toString().replace("Дата знакомства: ", ""));
 
         new AlertDialog.Builder(this)
                 .setTitle("Редактировать информацию")
                 .setView(dialogView)
                 .setPositiveButton("Сохранить", (dialog, which) -> {
-                    String updatedName = nameEditText.getText().toString();
+                    String updatedLastName = lastNameEditText.getText().toString();
+                    String updatedFirstName = firstNameEditText.getText().toString();
+                    String updatedMiddleName = middleNameEditText.getText().toString();
                     String updatedDate = dateEditText.getText().toString();
-                    updatePersonDetails(updatedName, updatedDate);
+
+                    updatePersonDetails(updatedLastName, updatedFirstName, updatedMiddleName, updatedDate);
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
     }
 
-    private void updatePersonDetails(String fullName, String dateOfMeeting) {
-        ContentValues values = new ContentValues();
-        values.put("full_name", fullName);
-        values.put("date_of_meeting", dateOfMeeting);
-
-        database.update("people", values, "id = ?", new String[]{String.valueOf(personId)});
+    private void updatePersonDetails(String lastName, String firstName, String middleName, String dateOfMeeting) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("person_" + personId + "_lastName", lastName);
+        editor.putString("person_" + personId + "_firstName", firstName);
+        editor.putString("person_" + personId + "_middleName", middleName);
+        editor.putString("person_" + personId + "_date", dateOfMeeting);
+        editor.apply();
 
         // Обновление UI
-        lastNameTextView.setText("Фамилия: " + fullName);
+        lastNameTextView.setText("Фамилия: " + lastName);
+        firstNameTextView.setText("Имя: " + firstName);
+        middleNameTextView.setText("Отчество: " + middleName);
         meetingDateTextView.setText("Дата знакомства: " + dateOfMeeting);
         timePassedTextView.setText(calculateTimeSinceMeeting(dateOfMeeting));
-    }
-
-    private void deletePerson() {
-        new AlertDialog.Builder(this)
-                .setTitle("Удалить")
-                .setMessage("Вы уверены, что хотите удалить этого человека?")
-                .setPositiveButton("Удалить", (dialog, which) -> {
-                    database.delete("people", "id = ?", new String[]{String.valueOf(personId)});
-                    finish(); // Закрытие активности
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
     }
 }

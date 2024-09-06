@@ -5,16 +5,32 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Поле для редактирования фамилии -->
     <EditText
-        android:id="@+id/nameEditText"
+        android:id="@+id/editTextLastName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="ФИО" />
+        android:hint="Фамилия" />
 
+    <!-- Поле для редактирования имени -->
     <EditText
-        android:id="@+id/dateEditText"
+        android:id="@+id/editTextFirstName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Дата знакомства"
+        android:hint="Имя" />
+
+    <!-- Поле для редактирования отчества -->
+    <EditText
+        android:id="@+id/editTextMiddleName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Отчество" />
+
+    <!-- Поле для редактирования даты встречи -->
+    <EditText
+        android:id="@+id/editTextDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Дата встречи"
         android:inputType="date" />
 </LinearLayout>

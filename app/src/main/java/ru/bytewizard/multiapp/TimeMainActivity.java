@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class TimeMainActivity extends AppCompatActivity implements OnPersonListUpdatedListener {
+public class TimeMainActivity extends AppCompatActivity implements AddPersonDialogFragment.OnPersonListUpdatedListener {
 
     private LinearLayout personListLayout;
 
@@ -35,7 +35,7 @@ public class TimeMainActivity extends AppCompatActivity implements OnPersonListU
 
     private void openAddPersonDialog() {
         AddPersonDialogFragment dialog = new AddPersonDialogFragment();
-        dialog.setListener(this); // Передача слушателя
+        dialog.setListener(TimeMainActivity.this); // Передача слушателя
         dialog.show(getSupportFragmentManager(), "AddPersonDialog");
     }
 
@@ -67,11 +67,14 @@ public class TimeMainActivity extends AppCompatActivity implements OnPersonListU
             nameTextView.setText(firstName + " " + lastName);
             dateTextView.setText(date);
 
+            // Создаем финальную копию переменной i
+            final int personId = i;
+
             // Установка кликабельности на элемент списка для перехода к деталям
             personView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    openPersonDetailsActivity(i); // Используем ID для открытия деталей
+                    openPersonDetailsActivity(personId); // Используем ID для открытия деталей
                 }
             });
 
